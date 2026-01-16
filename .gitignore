@@ -23,9 +23,7 @@ __pycache__
 pip-log.txt
 
 # Unit test / coverage reports
-.coverage
-.tox
-nosetests.xml
+/coverage
 
 # Translations
 *.mo
@@ -34,3 +32,20 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+node_modules
+*.tgz
+*.log
+src/Settings.schema.json
+
+docs/docs
+*.json5
+Makefile
+botr
+archive
+packaged
+
+# Don't put anything in docs, the docs are generated from the source code
+docs
+
+

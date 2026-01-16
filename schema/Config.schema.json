@@ -1,0 +1,646 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$ref": "#/definitions/Config",
+    "definitions": {
+        "Config": {
+            "type": "object",
+            "properties": {
+                "apikey": {
+                    "type": "string",
+                    "description": "API key for the bot."
+                },
+                "engine": {
+                    "type": "string",
+                    "description": "Engine specifier of the bot, this is a plain text description of the bot's engine and network that will be recorded along with all games played."
+                },
+                "verbosity": {
+                    "type": "number",
+                    "description": "Enable verbose logging.",
+                    "default": 0
+                },
+                "log_game_chat": {
+                    "type": "boolean",
+                    "description": "Enable logging game chat.",
+                    "default": false
+                },
+                "status_update_frequency": {
+                    "type": "number",
+                    "description": "Sets how often the status lines are printed to the screen. Set to 0 to disable. units: milliseconds",
+                    "default": 60000
+                },
+                "server": {
+                    "type": "string",
+                    "description": "Server URL to connect to, defaults to online-go.com",
+                    "default": "https://online-go.com"
+                },
+                "max_pause_time": {
+                    "type": "number",
+                    "description": "Maximum time to allow the game to be paused for in seconds.",
+                    "default": 300
+                },
+                "blacklist": {
+                    "type": "array",
+                    "items": {
+                        "type": [
+                            "number",
+                            "string"
+                        ]
+                    },
+                    "description": "Players who are not allowed to play the bot ever."
+                },
+                "whitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": [
+                            "number",
+                            "string"
+                        ]
+                    },
+                    "description": "Players who are allowed to challenge the bot with any settings even when the bot is at the maximum number of simultaneous games"
+                },
+                "bot": {
+                    "$ref": "#/definitions/BotConfig",
+                    "description": "Config for how to run your bot"
+                },
+                "opening_bot": {
+                    "$ref": "#/definitions/OpeningBotConfig",
+                    "description": "Bot to use for playing opening moves. This can be useful for ensuring your bot plays at least a few reasonable joseki moves if it is a weak bot."
+                },
+                "ending_bot": {
+                    "$ref": "#/definitions/EndingBotConfig",
+                    "description": "Secondary bot to use for ensuring your real bot passes or resigns appropriately. This bot will be consulted every move after . If the move it returns is a pass it will override the move your bot has made (unless your bot is resigning). If the move it returns is a resign, it will count the number of successive resigns and if it is more than the number of allowed resigns you've set in this config (default of 3), it will override your bot's move with a resign."
+                },
+                "greeting": {
+                    "$ref": "#/definitions/TranslatableString",
+                    "description": "Message to send to the player at the start of the game"
+                },
+                "farewell": {
+                    "$ref": "#/definitions/TranslatableString",
+                    "description": "Message to send to the player when the game is over"
+                },
+                "farewellscore": {
+                    "type": "boolean",
+                    "description": "Send a message saying what the bot thought the score was at the end of the game"
+                },
+                "logfile": {
+                    "type": "string",
+                    "description": "File to write logs to. Logs will be sent to stdout as well."
+                },
+                "allowed_time_control_systems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BotTimeControlSystems"
+                    },
+                    "description": "Time control systems that we can work with",
+                    "default": [
+                        "fischer",
+                        "byoyomi",
+                        "simple"
+                    ],
+                    "minItems": 1
+                },
+                "allowed_blitz_settings": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/TimeControlRanges"
+                        }
+                    ],
+                    "description": "Allowed blitz times for the bot. Blitz is disabled by default, but you can enable it by providing acceptable time settings.",
+                    "default": null
+                },
+                "allowed_rapid_settings": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/TimeControlRanges"
+                        }
+                    ],
+                    "description": "Allowed rapid game times for bot."
+                },
+                "allowed_live_settings": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/TimeControlRanges"
+                        }
+                    ],
+                    "description": "Allowed live game times for bot.",
+                    "default": {
+                        "per_move_time_range": [
+                            10,
+                            300
+                        ],
+                        "main_time_range": [
+                            0,
+                            3600
+                        ],
+                        "periods_range": [
+                            1,
+                            10
+                        ]
+                    }
+                },
+                "allowed_correspondence_settings": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "$ref": "#/definitions/TimeControlRanges"
+                        }
+                    ],
+                    "description": "Allowed correspondence game times for bot.",
+                    "default": {
+                        "per_move_time_range": [
+                            43200,
+                            259200
+                        ],
+                        "main_time_range": [
+                            0,
+                            86400
+                        ],
+                        "periods_range": [
+                            1,
+                            10
+                        ]
+                    }
+                },
+                "allowed_board_sizes": {
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            }
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "string",
+                            "const": "all"
+                        },
+                        {
+                            "type": "string",
+                            "const": "square"
+                        },
+                        {
+                            "$ref": "#/definitions/BoardSizeRanges"
+                        }
+                    ],
+                    "description": "Allowed board sizes for the bot. If there are no restrictions, you can provide \"all\", or if you can play on any square board, you can provide \"square\".\n\nYou can also provide explicit width and height ranges for non square boards with `{width_range: [min, max], height_range: [min, max]}`.",
+                    "default": [
+                        9,
+                        13,
+                        19
+                    ]
+                },
+                "allow_ranked": {
+                    "type": "boolean",
+                    "description": "Allowed ranked games",
+                    "default": true
+                },
+                "allow_unranked": {
+                    "type": "boolean",
+                    "description": "Allowed unranked games",
+                    "default": true
+                },
+                "allowed_rank_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Allowed range for ranked games",
+                    "default": [
+                        "30k",
+                        "9p"
+                    ]
+                },
+                "allow_ranked_handicap": {
+                    "type": "boolean",
+                    "description": "Allow handicap games for ranked games",
+                    "default": true
+                },
+                "allow_unranked_handicap": {
+                    "type": "boolean",
+                    "description": "Allow handicap games for unranked games",
+                    "default": true
+                },
+                "allowed_komi_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Allowed komi range. Negative numbers indicate reverse Komi.",
+                    "default": [
+                        -99,
+                        99
+                    ]
+                },
+                "hidden": {
+                    "type": "boolean",
+                    "description": "Hide the bot from the public bot list",
+                    "default": false
+                },
+                "decline_new_challenges": {
+                    "type": "boolean",
+                    "description": "Decline all new challenges. This implies hidden.",
+                    "default": false
+                },
+                "showboard": {
+                    "type": "boolean",
+                    "description": "Used for debugging, will issue a showboard command when we've loaded the board state into the bot",
+                    "default": false
+                },
+                "min_move_time": {
+                    "type": "number",
+                    "description": "If set, bot moves will be delayed when made before `min_move_time` ms. This is primarily a user experience thing as can make players feel rushed if the bots are responding too quickly.",
+                    "default": 1500
+                },
+                "max_games_per_player": {
+                    "type": "number",
+                    "description": "Maximum amount of ongoing games to allow concurrently by the same player",
+                    "default": 1
+                }
+            },
+            "required": [
+                "apikey"
+            ],
+            "additionalProperties": false,
+            "description": "Bot config"
+        },
+        "BotConfig": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "manager": {
+                    "type": "string",
+                    "enum": [
+                        "pool",
+                        "persistent"
+                    ],
+                    "description": "Management method for managing bot instances. `pool` starts up a fixed `instances` number of bots and and reuses them for all games. `persistent` starts up a single bot instance per game and allows state re-use to allow things like pondering.",
+                    "default": "persistent"
+                },
+                "instances": {
+                    "type": "number",
+                    "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are. This is only applicable when using the pooling manager.",
+                    "default": 1
+                },
+                "enable_clock": {
+                    "type": "boolean",
+                    "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
+                    "default": true
+                },
+                "send_chats": {
+                    "type": "boolean"
+                },
+                "send_pv_data": {
+                    "type": "boolean",
+                    "description": "Send the principal variation (PV) values. Note that your bot must output this data in a way that can be parsed.",
+                    "default": true
+                },
+                "release_delay": {
+                    "type": "number",
+                    "description": "After a bot makes a move, some bots will continue writing to stderr relevant information (such as chats or PV data). This option controls how long we wait for the bot to finish writing to stderr before we release the bot back into the pool of available bots.",
+                    "default": 100
+                },
+                "quit_grace_period": {
+                    "type": "number",
+                    "description": "When a bot is to shutdown we send a `quit` command to the bot. This grace period is the number of milliseconds to wait for the bot to quit gracefully before sending a `SIGTERM` to the bot. Furthermore, if the bot doesn't terminate after the `SIGTERM` for another grace period, we will send a `SIGKILL` to the bot.",
+                    "default": 5000
+                },
+                "persistent_idle_timeout": {
+                    "type": "number",
+                    "description": "When the manager is set to \"persistent\", If no moves are made within this timeout, the bot process is terminated. If a new move is made a new process will be started to resume playing the game.",
+                    "default": 600000
+                }
+            },
+            "required": [
+                "command",
+                "release_delay"
+            ],
+            "additionalProperties": false,
+            "description": "Bot config"
+        },
+        "OpeningBotConfig": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "manager": {
+                    "type": "string",
+                    "enum": [
+                        "pool",
+                        "persistent"
+                    ],
+                    "description": "Management method for managing bot instances. `pool` starts up a fixed `instances` number of bots and and reuses them for all games. `persistent` starts up a single bot instance per game and allows state re-use to allow things like pondering.",
+                    "default": "persistent"
+                },
+                "instances": {
+                    "type": "number",
+                    "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are. This is only applicable when using the pooling manager.",
+                    "default": 1
+                },
+                "enable_clock": {
+                    "type": "boolean",
+                    "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
+                    "default": true
+                },
+                "send_chats": {
+                    "type": "boolean"
+                },
+                "send_pv_data": {
+                    "type": "boolean",
+                    "description": "Send the principal variation (PV) values. Note that your bot must output this data in a way that can be parsed.",
+                    "default": true
+                },
+                "release_delay": {
+                    "type": "number",
+                    "description": "After a bot makes a move, some bots will continue writing to stderr relevant information (such as chats or PV data). This option controls how long we wait for the bot to finish writing to stderr before we release the bot back into the pool of available bots.",
+                    "default": 100
+                },
+                "quit_grace_period": {
+                    "type": "number",
+                    "description": "When a bot is to shutdown we send a `quit` command to the bot. This grace period is the number of milliseconds to wait for the bot to quit gracefully before sending a `SIGTERM` to the bot. Furthermore, if the bot doesn't terminate after the `SIGTERM` for another grace period, we will send a `SIGKILL` to the bot.",
+                    "default": 5000
+                },
+                "persistent_idle_timeout": {
+                    "type": "number",
+                    "description": "When the manager is set to \"persistent\", If no moves are made within this timeout, the bot process is terminated. If a new move is made a new process will be started to resume playing the game.",
+                    "default": 600000
+                },
+                "number_of_opening_moves_to_play": {
+                    "type": "number",
+                    "description": "Number of opening moves to play before switching to the main bot.",
+                    "default": 8
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "command",
+                "release_delay"
+            ]
+        },
+        "EndingBotConfig": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "manager": {
+                    "type": "string",
+                    "enum": [
+                        "pool",
+                        "persistent"
+                    ],
+                    "description": "Management method for managing bot instances. `pool` starts up a fixed `instances` number of bots and and reuses them for all games. `persistent` starts up a single bot instance per game and allows state re-use to allow things like pondering.",
+                    "default": "persistent"
+                },
+                "instances": {
+                    "type": "number",
+                    "description": "Number of instances of the bot to run in parallel. Exactly this many instances will be run at any given time, regardless of how many ongoing games there are. This is only applicable when using the pooling manager.",
+                    "default": 1
+                },
+                "enable_clock": {
+                    "type": "boolean",
+                    "description": "Enabled clocks being sent to the bot. Clocks will only be sent when the applicable clock commands are detected from the bot anyways, so this is generally fine to leave turned on.",
+                    "default": true
+                },
+                "send_chats": {
+                    "type": "boolean"
+                },
+                "send_pv_data": {
+                    "type": "boolean",
+                    "description": "Send the principal variation (PV) values. Note that your bot must output this data in a way that can be parsed.",
+                    "default": true
+                },
+                "release_delay": {
+                    "type": "number",
+                    "description": "After a bot makes a move, some bots will continue writing to stderr relevant information (such as chats or PV data). This option controls how long we wait for the bot to finish writing to stderr before we release the bot back into the pool of available bots.",
+                    "default": 100
+                },
+                "quit_grace_period": {
+                    "type": "number",
+                    "description": "When a bot is to shutdown we send a `quit` command to the bot. This grace period is the number of milliseconds to wait for the bot to quit gracefully before sending a `SIGTERM` to the bot. Furthermore, if the bot doesn't terminate after the `SIGTERM` for another grace period, we will send a `SIGKILL` to the bot.",
+                    "default": 5000
+                },
+                "persistent_idle_timeout": {
+                    "type": "number",
+                    "description": "When the manager is set to \"persistent\", If no moves are made within this timeout, the bot process is terminated. If a new move is made a new process will be started to resume playing the game.",
+                    "default": 600000
+                },
+                "allowed_resigns": {
+                    "type": "number",
+                    "description": "Number of successive resigns allowed before the bot will resign.",
+                    "default": 3
+                },
+                "moves_to_allow_before_checking_ratio": {
+                    "type": "number",
+                    "description": "This is the ratio of the board size to the number of moves to allow before we will start checking the ending bot for passes and resigns. This is to prevent the bot from resigning too early in a game.\n\nThe move to start consulting the ending bot is calculated by taking\n\n  ceil(board_height * board_width * ratio)",
+                    "default": 0.8
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "command",
+                "release_delay"
+            ]
+        },
+        "TranslatableString": {
+            "type": "object",
+            "properties": {
+                "en": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "en"
+            ],
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "BotTimeControlSystems": {
+            "type": "string",
+            "enum": [
+                "fischer",
+                "byoyomi",
+                "simple"
+            ]
+        },
+        "TimeControlRanges": {
+            "type": "object",
+            "properties": {
+                "simple": {
+                    "type": "object",
+                    "properties": {
+                        "per_move_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable times per period in seconds",
+                            "default": "[10, 300] for live, [43200, 259200] for correspondence"
+                        }
+                    },
+                    "required": [
+                        "per_move_time_range"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Time control settings for Simple clocks"
+                },
+                "byoyomi": {
+                    "type": "object",
+                    "properties": {
+                        "main_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable main times in seconds.",
+                            "default": "[0, 3600] for live games, [0, 259200] for correspondence games"
+                        },
+                        "period_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable times per period in seconds",
+                            "default": "[10, 300] for live, [43200, 259200] for correspondence"
+                        },
+                        "periods_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable number of periods.",
+                            "default": [
+                                1,
+                                10
+                            ]
+                        }
+                    },
+                    "required": [
+                        "main_time_range",
+                        "period_time_range",
+                        "periods_range"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Time control settings for byo-yomi clocks"
+                },
+                "fischer": {
+                    "type": "object",
+                    "properties": {
+                        "initial_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable initial times in seconds.",
+                            "default": "[30, 600] for live games, [86400, 604800] for correspondence games"
+                        },
+                        "max_time_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "Range of acceptable max times in seconds.",
+                            "default": "[5, 7200] for live games, [86400, 604800] for correspondence games"
+                        },
+                        "time_increment_range": {
+                            "type": "array",
+                            "items": {
+                                "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "description": "range of acceptable times for the time increment",
+                            "default": "[10, 300] for live, [43200, 259200] for correspondence"
+                        }
+                    },
+                    "required": [
+                        "initial_time_range",
+                        "max_time_range",
+                        "time_increment_range"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Time control settings for fischer clocks"
+                },
+                "concurrent_games": {
+                    "type": "number",
+                    "description": "Concurrent games to allow for this speed bracket",
+                    "default": "1, 3, 500 for blitz, live, correspondence respectively"
+                }
+            },
+            "required": [
+                "concurrent_games"
+            ],
+            "additionalProperties": false
+        },
+        "BoardSizeRanges": {
+            "type": "object",
+            "properties": {
+                "width_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Specify the low and high range of acceptable board widths. This value is inclusive, so [5,19] would include 5, 19, and everything in between."
+                },
+                "height_range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "description": "Specify the low and high range of acceptable board heights. This value is inclusive, so [5,19] would include 5, 19, and everything in between."
+                }
+            },
+            "required": [
+                "width_range",
+                "height_range"
+            ],
+            "additionalProperties": false,
+            "description": "Range of acceptable custom board sizes"
+        }
+    }
+}
